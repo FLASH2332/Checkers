@@ -1,18 +1,92 @@
 {
   "version": 1,
-  "author": "Uri Shaked",
+  "author": "Jaya dev",
   "editor": "wokwi",
   "parts": [
-    { "type": "wokwi-arduino-uno", "id": "uno", "top": 335.4, "left": -11.69, "attrs": {} },
-    { "type": "wokwi-ili9341", "id": "lcd1", "top": 5.51, "left": 40.77, "attrs": {} }
+    { "type": "wokwi-arduino-uno", "id": "uno", "top": 327, "left": -0.6, "attrs": {} },
+    { "type": "board-ili9341-cap-touch", "id": "lcd1", "top": -8.84, "left": 38.02, "attrs": {} },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "button_up",
+      "top": 351.8,
+      "left": 345.6,
+      "attrs": { "label": "Up" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "button_down",
+      "top": 467,
+      "left": 355.2,
+      "attrs": { "label": "Down" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "button_left",
+      "top": 467,
+      "left": 499.2,
+      "attrs": { "label": "Left" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "button_right",
+      "top": 351.8,
+      "left": 480,
+      "attrs": { "label": "Right" }
+    },
+    {
+      "type": "wokwi-pushbutton",
+      "id": "button_select",
+      "top": 351.8,
+      "left": 595.2,
+      "attrs": { "label": "Select" }
+    }
   ],
   "connections": [
     [ "lcd1:GND", "uno:GND.1", "black", [ "v22", "h-46" ] ],
-    [ "lcd1:VCC", "uno:5V", "red", [ "v12", "h-103", "v251", "h104" ] ],
+    [ "lcd1:VCC", "uno:VIN", "red", [ "v12", "h-103", "v251", "h104" ] ],
     [ "lcd1:SCK", "uno:13", "green", [ "v16", "h-75" ] ],
     [ "lcd1:MISO", "uno:12", "limegreen", [ "v20", "h-78" ] ],
     [ "lcd1:MOSI", "uno:11", "green", [ "v24", "h-75" ] ],
     [ "lcd1:CS", "uno:10", "orange", [ "v32", "h-64" ] ],
-    [ "lcd1:D/C", "uno:9", "purple", [ "v36", "h-84" ] ]
-  ]
+    [ "lcd1:D/C", "uno:9", "purple", [ "v36", "h-84" ] ],
+    [ "lcd1:SCL", "uno:A5", "blue", [ "v30", "h106", "v214", "h-22" ] ],
+    [ "lcd1:SDA", "uno:A4", "green", [ "v24", "h105", "v229", "h-38" ] ],
+    [ "lcd1:LED", "uno:7", "green", [ "v38.4", "h38.4" ] ],
+    [ "button_up:GND", "uno:GND.3", "black", [ "v278.4", "h0", "v115.2", "h-163.2", "v-67.2" ] ],
+    [ "button_up:VCC", "uno:5V", "red", [ "v0" ] ],
+    [ "button_up:SIG", "uno:2", "green", [ "v0" ] ],
+    [ "button_down:GND", "uno:GND.3", "black", [ "v278.4", "h0", "v115.2", "h-163.2", "v-67.2" ] ],
+    [ "button_down:VCC", "uno:5V", "red", [ "v0" ] ],
+    [ "button_down:SIG", "uno:3", "green", [ "v0" ] ],
+    [ "button_left:GND", "uno:GND.3", "black", [ "v278.4", "h0", "v115.2", "h-163.2", "v-67.2" ] ],
+    [ "button_left:VCC", "uno:5V", "red", [ "v0" ] ],
+    [ "button_left:SIG", "uno:4", "green", [ "v0" ] ],
+    [
+      "button_right:GND",
+      "uno:GND.3",
+      "black",
+      [ "v278.4", "h0", "v115.2", "h-163.2", "v-67.2" ]
+    ],
+    [ "button_right:VCC", "uno:5V", "red", [ "v0" ] ],
+    [ "button_right:SIG", "uno:5", "green", [ "v0" ] ],
+    [
+      "button_select:GND",
+      "uno:GND.3",
+      "black",
+      [ "v278.4", "h0", "v115.2", "h-163.2", "v-67.2" ]
+    ],
+    [ "button_select:VCC", "uno:5V", "red", [ "v0" ] ],
+    [ "button_select:SIG", "uno:6", "green", [ "v0" ] ],
+    [ "uno:2", "button_up:2.r", "green", [ "v-24.09", "h203.61", "v67.2", "h9.6" ] ],
+    [ "uno:3", "button_down:2.r", "green", [ "h69.11", "v206.31", "h124.6" ] ],
+    [ "uno:4", "button_left:2.r", "green", [ "v-14.49", "h88.21", "v249.6", "h278.4", "v-76.8" ] ],
+    [ "uno:5", "button_right:2.r", "green", [ "v-52.89", "h366.51", "v96" ] ],
+    [ "uno:6", "button_select:2.r", "green", [ "v-43.29", "h481.61", "v86.4" ] ],
+    [ "uno:GND.2", "button_up:1.l", "black", [ "v86.3", "h157.5", "v-240", "h-9.6" ] ],
+    [ "uno:GND.2", "button_right:1.l", "black", [ "v86.3", "h291.9", "v-240" ] ],
+    [ "uno:GND.3", "button_down:1.l", "black", [ "v86.3", "h148", "v-124.8" ] ],
+    [ "uno:GND.3", "button_left:1.l", "black", [ "v86.3", "h282.4", "v-134.4" ] ],
+    [ "uno:GND.3", "button_select:1.l", "black", [ "v86.3", "h416.8", "v-9.6" ] ]
+  ],
+  "dependencies": {}
 }

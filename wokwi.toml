@@ -1,4 +1,62 @@
 [wokwi]
-version = 1
+version = "1.0.0"
 firmware = '.pio\build\uno\firmware.hex'
 elf = '.pio\build\uno\firmware.elf'
+
+[[connections]]
+from = "joystick:VRx"
+to = "uno:A0"
+
+[[connections]]
+from = "joystick:VRy"
+to = "uno:A1"
+
+[[connections]]
+from = "joystick:SW"
+to = "uno:7"
+
+[[connections]]
+from = "joystick:GND"
+to = "uno:GND"
+
+[[connections]]
+from = "joystick:5V"
+to = "uno:5V"
+
+[[components]]
+[[components.joystick]]
+
+[[components]]
+[[components.ili9341]]
+id = "tft"
+type = "ili9341"
+spi = "uno:10"
+dc = "uno:9"
+cs = "uno:8"
+reset = "uno:4"
+
+[[connections]]
+from = "tft:DC"
+to = "uno:9"
+
+[[connections]]
+from = "tft:CS"
+to = "uno:10"
+
+[[connections]]
+from = "tft:RESET"
+to = "uno:4"
+
+[[connections]]
+from = "tft:SPI"
+to = "uno:11"
+
+[[connections]]
+from = "tft:5V"
+to = "uno:5V"
+
+[[connections]]
+from = "tft:GND"
+to = "uno:GND"
+
+# Add any additional components or connections as needed
