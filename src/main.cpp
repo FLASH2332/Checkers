@@ -34,30 +34,46 @@ int cursorY = 0;
 int selectedX = -1;
 int selectedY = -1;
 bool pieceSelected = false;
+bool isPlayer1Turn = true; // Player 1 starts the game
 
-int board[BOARD_SIZE][BOARD_SIZE] = {
-  {1, 0, 1, 0, 1, 0, 1, 0},
-  {0, 1, 0, 1, 0, 1, 0, 1},
-  {1, 0, 1, 0, 1, 0, 1, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0},
-  {0, 2, 0, 2, 0, 2, 0, 2},
-  {2, 0, 1, 0, 2, 0, 2, 0},
-  {0, 0, 0, 0, 0, 0, 0, 0},
 
+enum Piece { EMPTY = 0, PLAYER1 = 1, PLAYER2 = 2, KING1 = -1, KING2 = -2 };
+
+
+// Initialize the board
+Piece board[BOARD_SIZE][BOARD_SIZE] = {
+  {PLAYER1, EMPTY, PLAYER1, EMPTY, PLAYER1, EMPTY, PLAYER1, EMPTY},
+  {EMPTY, PLAYER1, EMPTY, PLAYER1, EMPTY, PLAYER1, EMPTY, PLAYER1},
+  {PLAYER1, EMPTY, PLAYER1, EMPTY, PLAYER1, EMPTY, PLAYER1, EMPTY},
+  {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+  {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+  {EMPTY, PLAYER2, EMPTY, PLAYER2, EMPTY, PLAYER2, EMPTY, PLAYER2},
+  {PLAYER2, EMPTY, PLAYER2, EMPTY, PLAYER2, EMPTY, PLAYER2, EMPTY},
+  {EMPTY, PLAYER2, EMPTY, PLAYER2, EMPTY, PLAYER2, EMPTY, PLAYER2}
 };
+
+
 
 // Function prototypes
 void drawChessboard();
-void drawPieces(int board[BOARD_SIZE][BOARD_SIZE]);
+void drawPieces(Piece board[BOARD_SIZE][BOARD_SIZE]);
 void drawCoin(int row, int col, uint16_t color);
 void movePiece(int fromRow, int fromCol, int toRow, int toCol);
 void highlightSquare(int row, int col, uint16_t color);
 void drawSquare(int row, int col);
+bool hasMoreJump(int row, int col);
+bool isValidMove(Piece board[BOARD_SIZE][BOARD_SIZE], int fromRow, int fromCol, int toRow, int toCol);
 void handleButtons();
 void updateTimer();
 void updateScore();
 void displayStatus();
+
+
+// Function pointers for modular actions
+void (*drawSquarePtr)(int, int) = drawSquare;
+void (*highlightSquarePtr)(int, int, uint16_t) = highlightSquare;
+void (*movePiecePtr)(int, int, int, int) = movePiece;
+bool (*isValidMovePtr)(Piece [BOARD_SIZE][BOARD_SIZE], int, int, int, int) = isValidMove;
 
 void setup() {
   tft.begin();
@@ -88,7 +104,7 @@ void drawChessboard() {
   }
 }
 
-void drawPieces(int board[BOARD_SIZE][BOARD_SIZE]) {
+void drawPieces(Piece board[BOARD_SIZE][BOARD_SIZE]) {
   for (int row = 0; row < BOARD_SIZE; row++) {
     for (int col = 0; col < BOARD_SIZE; col++) {
       int value = board[row][col];
@@ -116,8 +132,21 @@ void drawCoin(int row, int col, uint16_t color) {
 void highlightSquare(int row, int col, uint16_t color) {
   int x = col * SQUARE_SIZE;
   int y = row * SQUARE_SIZE;
-  tft.drawRect(x, y, SQUARE_SIZE, SQUARE_SIZE, color);
+  int thickness = 3;  // Adjust thickness as needed
+
+  // Draw top and bottom borders
+  for (int i = 0; i < thickness; i++) {
+    tft.drawFastHLine(x, y + i, SQUARE_SIZE, color);                  // Top border
+    tft.drawFastHLine(x, y + SQUARE_SIZE - i - 1, SQUARE_SIZE, color); // Bottom border
+  }
+
+  // Draw left and right borders
+  for (int i = 0; i < thickness; i++) {
+    tft.drawFastVLine(x + i, y, SQUARE_SIZE, color);                  // Left border
+    tft.drawFastVLine(x + SQUARE_SIZE - i - 1, y, SQUARE_SIZE, color); // Right border
+  }
 }
+
 
 void drawSquare(int row, int col) {
   // Draw the square itself (alternating colors)
@@ -141,86 +170,123 @@ void drawSquare(int row, int col) {
   }
 }
 
+bool hasMoreJump(int row, int col) {
+  int piece = board[row][col];
+  
+  // Check for Player 1 regular piece
+  if (piece == 1) {
+    if (row + 2 < BOARD_SIZE && col + 2 < BOARD_SIZE && board[row + 1][col + 1] == 2 && board[row + 2][col + 2] == 0) return true;
+    if (row + 2 < BOARD_SIZE && col - 2 >= 0 && board[row + 1][col - 1] == 2 && board[row + 2][col - 2] == 0) return true;
+  }
+
+  // Check for Player 2 regular piece
+  else if (piece == 2) {
+    if (row - 2 >= 0 && col + 2 < BOARD_SIZE && board[row - 1][col + 1] == 1 && board[row - 2][col + 2] == 0) return true;
+    if (row - 2 >= 0 && col - 2 >= 0 && board[row - 1][col - 1] == 1 && board[row - 2][col - 2] == 0) return true;
+  }
+
+  // Check for kings (Player 1 and Player 2 kings)
+  if (piece == -1 || piece == -2) {
+    if (row + 2 < BOARD_SIZE && col + 2 < BOARD_SIZE && board[row + 1][col + 1] != 0 && board[row + 2][col + 2] == 0) return true;
+    if (row + 2 < BOARD_SIZE && col - 2 >= 0 && board[row + 1][col - 1] != 0 && board[row + 2][col - 2] == 0) return true;
+    if (row - 2 >= 0 && col + 2 < BOARD_SIZE && board[row - 1][col + 1] != 0 && board[row - 2][col + 2] == 0) return true;
+    if (row - 2 >= 0 && col - 2 >= 0 && board[row - 1][col - 1] != 0 && board[row - 2][col - 2] == 0) return true;
+  }
+
+  return false;  // No more jump moves available
+}
+
 
 void movePiece(int fromRow, int fromCol, int toRow, int toCol) {
   if (board[toRow][toCol] == 0) {
     if (abs(toRow - fromRow) == 2 && abs(toCol - fromCol) == 2) {
       int jumpedRow = (fromRow + toRow) / 2;
       int jumpedCol = (fromCol + toCol) / 2;
-      board[jumpedRow][jumpedCol] = 0;
-      drawSquare(jumpedRow, jumpedCol);
+      board[jumpedRow][jumpedCol] = EMPTY;  // Ensure this is valid for Piece
 
       // Update score when capturing a piece
       if (board[fromRow][fromCol] == 1) {
-        scorePlayer1+=1;
+        scorePlayer1 += 1;
       } else if (board[fromRow][fromCol] == 2) {
-        scorePlayer2+=1;
+        scorePlayer2 += 1;
       }
       updateScore();  // Update score after capturing
     }
 
     // Move the piece to the new square
-    board[toRow][toCol] = board[fromRow][fromCol];
-    board[fromRow][fromCol] = 0;
+    board[toRow][toCol] = board[fromRow][fromCol];  // Ensure this is valid for Piece
+    board[fromRow][fromCol] = EMPTY;  // Ensure this is valid for Piece
 
     // Check for promotion to king
     if (board[toRow][toCol] == 1 && toRow == 7) { // Player 1 promotes
-      board[toRow][toCol] = -1; // Promote to king
+      board[toRow][toCol] = KING1; // Promote to king, ensure -1 is valid for Piece
       scorePlayer1 += 2; // Add bonus points
       updateScore(); // Update score for promotion
     } else if (board[toRow][toCol] == 2 && toRow == 0) { // Player 2 promotes
-      board[toRow][toCol] = -2; // Promote to king
+      board[toRow][toCol] = KING2; // Promote to king, ensure -2 is valid for Piece
       scorePlayer2 += 2; // Add bonus points
       updateScore(); // Update score for promotion
     }
 
     // Redraw the moved squares
-    drawSquare(fromRow, fromCol);
-    drawSquare(toRow, toCol);
-    drawPieces(board); // Redraw pieces on the board
+    (*drawSquarePtr)(fromRow, fromCol);
+    (*drawSquarePtr)(toRow, toCol);
+    drawPieces(board); // Call the function correctly
+
+    // Check for more jumps after a capture
+    if (abs(toRow - fromRow) == 2 && hasMoreJump(toRow, toCol)) {
+      // Highlight the current piece to indicate the player can continue jumping
+      selectedX = toCol;
+      selectedY = toRow;
+      highlightSquare(toRow, toCol, ILI9341_YELLOW);
+      pieceSelected = true;  // Keep piece selected for another move
+    } else {
+      pieceSelected = false; // End player's turn
+    }
   }
 }
 
 
-bool isValidMove(int board[BOARD_SIZE][BOARD_SIZE], int fromRow, int fromCol, int toRow, int toCol) {
-  if (board[toRow][toCol] != 0) {
+
+bool isValidMove(Piece board[BOARD_SIZE][BOARD_SIZE], int fromRow, int fromCol, int toRow, int toCol) {
+  if (board[toRow][toCol] != EMPTY) {
     return false;  // Destination square must be empty
   }
 
-  int piece = board[fromRow][fromCol];
+  Piece piece = board[fromRow][fromCol];
 
   // Player 1 regular piece
-  if (piece == 1) {
+  if (piece == PLAYER1) {
     if (toRow == fromRow + 1 && abs(toCol - fromCol) == 1) {
       return true;  // Normal move
-    } else if (toRow == fromRow + 2 && abs(toCol - fromCol) == 2 && board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == 2) {
+    } else if (toRow == fromRow + 2 && abs(toCol - fromCol) == 2 && board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == PLAYER2) {
       return true;  // Capture move
     }
   }
 
   // Player 2 regular piece
-  else if (piece == 2) {
+  else if (piece == PLAYER2) {
     if (toRow == fromRow - 1 && abs(toCol - fromCol) == 1) {
       return true;  // Normal move
-    } else if (toRow == fromRow - 2 && abs(toCol - fromCol) == 2 && board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == 1) {
+    } else if (toRow == fromRow - 2 && abs(toCol - fromCol) == 2 && board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == PLAYER1) {
       return true;  // Capture move
     }
   }
 
   // Player 1 king (can move both forward and backward)
-  else if (piece == -1) {
+  else if (piece == KING1) {
     if (abs(toRow - fromRow) == 1 && abs(toCol - fromCol) == 1) {
       return true;  // Normal move in any direction
-    } else if (abs(toRow - fromRow) == 2 && abs(toCol - fromCol) == 2 && (board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == 2 || board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == -2)) {
+    } else if (abs(toRow - fromRow) == 2 && abs(toCol - fromCol) == 2 && (board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == PLAYER2 || board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == KING2)) {
       return true;  // Capture move in any direction
     }
   }
 
   // Player 2 king (can move both forward and backward)
-  else if (piece == -2) {
+  else if (piece == KING2) {
     if (abs(toRow - fromRow) == 1 && abs(toCol - fromCol) == 1) {
       return true;  // Normal move in any direction
-    } else if (abs(toRow - fromRow) == 2 && abs(toCol - fromCol) == 2 && (board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == 1 || board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == -1)) {
+    } else if (abs(toRow - fromRow) == 2 && abs(toCol - fromCol) == 2 && (board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == PLAYER1 || board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == KING1)) {
       return true;  // Capture move in any direction
     }
   }
@@ -228,15 +294,15 @@ bool isValidMove(int board[BOARD_SIZE][BOARD_SIZE], int fromRow, int fromCol, in
   return false;
 }
 
+
+
 void handleButtons() {
-  // Highlight only when the cursor moves
   if (cursorX != lastX || cursorY != lastY) {
     if (lastX != -1 && lastY != -1) {
-      highlightSquare(lastY, lastX, ILI9341_BLACK);  // Unhighlight previous square
-      drawSquare(lastY, lastX);                      // Redraw square under the highlight
+      (*highlightSquarePtr)(lastY, lastX, ILI9341_BLACK);// Unhighlight previous square
+      (*drawSquarePtr)(lastY, lastX);                     // Redraw square under the highlight
     }
-
-    highlightSquare(cursorY, cursorX, ILI9341_YELLOW); // Highlight current square
+    (*highlightSquarePtr)(cursorY, cursorX, HIGHLIGHT_COLOR);     // Highlight current square
     lastX = cursorX;
     lastY = cursorY;
   }
@@ -259,21 +325,37 @@ void handleButtons() {
     delay(200);
   }
 
-  // Handle coin selection and movement
-  if (digitalRead(BUTTON_SELECT) == LOW) {
-    if (!pieceSelected) {
+// Handle coin selection and movement
+if (digitalRead(BUTTON_SELECT) == LOW) {
+  if (!pieceSelected) {
+    // Check if the selected piece belongs to the current player
+    int selectedPiece = board[cursorY][cursorX];
+    if ((isPlayer1Turn && (selectedPiece == PLAYER1 || selectedPiece == KING1)) || 
+        (!isPlayer1Turn && (selectedPiece == PLAYER2 || selectedPiece == KING2))) {
       selectedX = cursorX;
       selectedY = cursorY;
       pieceSelected = true;
-      highlightSquare(cursorY, cursorX, ILI9341_YELLOW);
-    } else {
-      if (isValidMove(board, selectedY, selectedX, cursorY, cursorX)) {
-        movePiece(selectedY, selectedX, cursorY, cursorX);
-      }
-      pieceSelected = false;
+      highlightSquare(cursorY, cursorX, ILI9341_YELLOW); // Highlight selected piece
     }
-    delay(200); 
+  } else {
+    if (isValidMove(board, selectedY, selectedX, cursorY, cursorX)) {
+      movePiece(selectedY, selectedX, cursorY, cursorX);
+
+      // Un-highlight the previous square
+      highlightSquare(selectedY, selectedX, ILI9341_BLACK); 
+
+      // Toggle the turn after a valid move
+      isPlayer1Turn = !isPlayer1Turn;
+    } else {
+      // Briefly flash red to indicate an invalid move
+      highlightSquare(selectedY, selectedX, ILI9341_RED); 
+      delay(100);
+      highlightSquare(selectedY, selectedX, ILI9341_YELLOW);
+    }
+    pieceSelected = false;
   }
+  delay(200); 
+}
 }
 
 
@@ -311,23 +393,28 @@ void updateScore() {
 
 void displayStatus() {
   updateTimer();  // Update and check timer
-  tft.setCursor(10, BOARD_SIZE * SQUARE_SIZE + 10); // Position for time display
+
+  // Display timer
+  tft.setCursor(10, BOARD_SIZE * SQUARE_SIZE + 10);
   tft.setTextColor(ILI9341_WHITE);
   tft.setTextSize(2);
   tft.print("Time: ");
   tft.print(TOTAL_TIME);  // Print the remaining seconds
   tft.print("s");  // Include "s" for seconds
 
-  // Set cursor for player 1 score
+  // Display Player 1 score with color indication
   tft.setCursor(10, BOARD_SIZE * SQUARE_SIZE + 30);
+  tft.setTextColor(isPlayer1Turn ? ILI9341_GREEN : ILI9341_BLUE);  // Green if Player 1's turn
   tft.print("Player 1: ");
-  tft.print(scorePlayer1);  // Print player 1 score
+  tft.print(scorePlayer1);
 
-  // Set cursor for player 2 score
+  // Display Player 2 score with color indication
   tft.setCursor(10, BOARD_SIZE * SQUARE_SIZE + 50);
+  tft.setTextColor(!isPlayer1Turn ? ILI9341_GREEN : ILI9341_BLUE);  // Green if Player 2's turn
   tft.print("Player 2: ");
-  tft.print(scorePlayer2);  // Print player 2 score
+  tft.print(scorePlayer2);
 }
+
 
 
 
@@ -336,4 +423,3 @@ void loop() {
   handleButtons();
   displayStatus();
 }
-
