@@ -3,13 +3,13 @@
 Welcome to the Checkers Project! This README will provide a comprehensive overview of the project, including how to set up, use, and contribute to the game.
 
 **Table of Contents**<br/>
-Introduction<br/>
-Features<br/>
-Installation<br/>
-Usage<br/>
-Contributing<br/>
-License<br/>
-Contact<br/>
+•Introduction<br/>
+•Features<br/>
+•Installation<br/>
+•Usage<br/>
+•Contributing<br/>
+•License<br/>
+•Contact<br/>
 
 **Introduction**<br/>
 The Checkers Project is an implementation of the classic board game Checkers, also known as Draughts. This project aims to provide a fun and interactive way to play Checkers, complete with AI opponents and customizable settings.
@@ -26,10 +26,10 @@ bash
 Copy
 git clone https://github.com/FLASH2332/Checkers.git<br/>
 Setup platformIO with necessary libraries like <br/>
-Adafruit BusIO<br/>
-Adafruit GFX Library<br/>
-Adafruit ILI9341<br/>
-Adafruit TouchScreen<br/>
+•Adafruit BusIO<br/>
+•Adafruit GFX Library<br/>
+•Adafruit ILI9341<br/>
+•Adafruit TouchScreen<br/>
 
 Also setup wokwi for vscode in your system with license which can done throught wokwi website :https://wokwi.com/ <br/>
 
