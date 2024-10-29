@@ -25,7 +25,16 @@ To get started, clone the repository and install the necessary dependencies.
 bash
 Copy
 git clone https://github.com/FLASH2332/Checkers.git<br/>
-Usage<br/>
+Setup platformIO with necessary libraries like <br/>
+Adafruit BusIO<br/>
+Adafruit GFX Library<br/>
+Adafruit ILI9341<br/>
+Adafruit TouchScreen<br/>
+
+Also setup wokwi for vscode in your system with license which can done throught wokwi website :https://wokwi.com/ <br/>
+
+
+**Usage**<br/>
 Run the game using the following command:
 Click play button in diagram.json
 Enjoy playing Checkers! Refer to the game instructions for controls and rules.
