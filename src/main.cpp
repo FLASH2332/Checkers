@@ -20,7 +20,7 @@ Adafruit_ILI9341 tft = Adafruit_ILI9341(TFT_CS, TFT_DC, TFT_RST);
 #define SCREEN_HEIGHT 320
 
 // Variables for timer and score
-#define TOTAL_TIME 45 // Total game time in seconds (20 seconds)
+#define TOTAL_TIME 60 // Total game time in seconds (60 seconds)
 unsigned long startTime;
 int elapsedSeconds = 0;
 int remainingSeconds = TOTAL_TIME; // Global variable to track remaining seconds
@@ -43,13 +43,13 @@ enum Piece { EMPTY = 0, PLAYER1 = 1, PLAYER2 = 2, KING1 = -1, KING2 = -2 };
 // Initialize the board
 Piece board[BOARD_SIZE][BOARD_SIZE] = {
   {PLAYER1, EMPTY, PLAYER1, EMPTY, PLAYER1, EMPTY, PLAYER1, EMPTY},
-  {EMPTY, PLAYER1, EMPTY, PLAYER1, EMPTY, PLAYER1, EMPTY, PLAYER1},
+  {EMPTY, PLAYER1, EMPTY, EMPTY, EMPTY, PLAYER1, EMPTY, PLAYER1},
   {PLAYER1, EMPTY, PLAYER1, EMPTY, PLAYER1, EMPTY, PLAYER1, EMPTY},
   {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
-  {EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
+  {EMPTY, EMPTY, PLAYER1, EMPTY, EMPTY, EMPTY, EMPTY, EMPTY},
   {EMPTY, PLAYER2, EMPTY, PLAYER2, EMPTY, PLAYER2, EMPTY, PLAYER2},
-  {PLAYER2, EMPTY, PLAYER2, EMPTY, PLAYER2, EMPTY, PLAYER2, EMPTY},
-  {EMPTY, PLAYER2, EMPTY, PLAYER2, EMPTY, PLAYER2, EMPTY, PLAYER2}
+  {PLAYER2, EMPTY, PLAYER1, EMPTY, PLAYER2, EMPTY, PLAYER2, EMPTY},
+  {EMPTY, PLAYER2, EMPTY, EMPTY, EMPTY, PLAYER2, EMPTY, PLAYER2}
 };
 
 
@@ -132,24 +132,22 @@ void drawCoin(int row, int col, uint16_t color) {
 void highlightSquare(int row, int col, uint16_t color) {
   int x = col * SQUARE_SIZE;
   int y = row * SQUARE_SIZE;
-  int thickness = 3;  // Adjust thickness as needed
+  int thickness = 3;  
 
-  // Draw top and bottom borders
   for (int i = 0; i < thickness; i++) {
-    tft.drawFastHLine(x, y + i, SQUARE_SIZE, color);                  // Top border
-    tft.drawFastHLine(x, y + SQUARE_SIZE - i - 1, SQUARE_SIZE, color); // Bottom border
+    tft.drawFastHLine(x, y + i, SQUARE_SIZE, color);                 
+    tft.drawFastHLine(x, y + SQUARE_SIZE - i - 1, SQUARE_SIZE, color); 
   }
 
-  // Draw left and right borders
   for (int i = 0; i < thickness; i++) {
-    tft.drawFastVLine(x + i, y, SQUARE_SIZE, color);                  // Left border
-    tft.drawFastVLine(x + SQUARE_SIZE - i - 1, y, SQUARE_SIZE, color); // Right border
+    tft.drawFastVLine(x + i, y, SQUARE_SIZE, color);                  
+    tft.drawFastVLine(x + SQUARE_SIZE - i - 1, y, SQUARE_SIZE, color); 
   }
 }
 
 
 void drawSquare(int row, int col) {
-  // Draw the square itself (alternating colors)
+  // Draw the square itself 
   uint16_t color = (row + col) % 2 == 0 ? ILI9341_BLACK : ILI9341_WHITE;
   int x = col * SQUARE_SIZE;
   int y = row * SQUARE_SIZE;
@@ -171,80 +169,86 @@ void drawSquare(int row, int col) {
 }
 
 bool hasMoreJump(int row, int col) {
-  int piece = board[row][col];
-  
-  // Check for Player 1 regular piece
-  if (piece == 1) {
-    if (row + 2 < BOARD_SIZE && col + 2 < BOARD_SIZE && board[row + 1][col + 1] == 2 && board[row + 2][col + 2] == 0) return true;
-    if (row + 2 < BOARD_SIZE && col - 2 >= 0 && board[row + 1][col - 1] == 2 && board[row + 2][col - 2] == 0) return true;
-  }
+    int piece = board[row][col];
 
-  // Check for Player 2 regular piece
-  else if (piece == 2) {
-    if (row - 2 >= 0 && col + 2 < BOARD_SIZE && board[row - 1][col + 1] == 1 && board[row - 2][col + 2] == 0) return true;
-    if (row - 2 >= 0 && col - 2 >= 0 && board[row - 1][col - 1] == 1 && board[row - 2][col - 2] == 0) return true;
-  }
+    // Check for Player 1 regular piece
+    if (piece == PLAYER1) {
+        if (row + 2 < BOARD_SIZE && col + 2 < BOARD_SIZE && board[row + 1][col + 1] == PLAYER2 && board[row + 2][col + 2] == EMPTY) return true;
+        if (row + 2 < BOARD_SIZE && col - 2 >= 0 && board[row + 1][col - 1] == PLAYER2 && board[row + 2][col - 2] == EMPTY) return true;
+    }
 
-  // Check for kings (Player 1 and Player 2 kings)
-  if (piece == -1 || piece == -2) {
-    if (row + 2 < BOARD_SIZE && col + 2 < BOARD_SIZE && board[row + 1][col + 1] != 0 && board[row + 2][col + 2] == 0) return true;
-    if (row + 2 < BOARD_SIZE && col - 2 >= 0 && board[row + 1][col - 1] != 0 && board[row + 2][col - 2] == 0) return true;
-    if (row - 2 >= 0 && col + 2 < BOARD_SIZE && board[row - 1][col + 1] != 0 && board[row - 2][col + 2] == 0) return true;
-    if (row - 2 >= 0 && col - 2 >= 0 && board[row - 1][col - 1] != 0 && board[row - 2][col - 2] == 0) return true;
-  }
+    // Check for Player 2 regular piece
+    else if (piece == PLAYER2) {
+        if (row - 2 >= 0 && col + 2 < BOARD_SIZE && board[row - 1][col + 1] == PLAYER1 && board[row - 2][col + 2] == EMPTY) return true;
+        if (row - 2 >= 0 && col - 2 >= 0 && board[row - 1][col - 1] == PLAYER1 && board[row - 2][col - 2] == EMPTY) return true;
+    }
 
-  return false;  // No more jump moves available
+    // Check for kings
+    if (piece == KING1 || piece == KING2) {
+        if (row + 2 < BOARD_SIZE && col + 2 < BOARD_SIZE && board[row + 1][col + 1] != EMPTY && board[row + 2][col + 2] == EMPTY) return true;
+        if (row + 2 < BOARD_SIZE && col - 2 >= 0 && board[row + 1][col - 1] != EMPTY && board[row + 2][col - 2] == EMPTY) return true;
+        if (row - 2 >= 0 && col + 2 < BOARD_SIZE && board[row - 1][col + 1] != EMPTY && board[row - 2][col + 2] == EMPTY) return true;
+        if (row - 2 >= 0 && col - 2 >= 0 && board[row - 1][col - 1] != EMPTY && board[row - 2][col - 2] == EMPTY) return true;
+    }
+
+    return false;
 }
 
 
 void movePiece(int fromRow, int fromCol, int toRow, int toCol) {
-  if (board[toRow][toCol] == 0) {
-    if (abs(toRow - fromRow) == 2 && abs(toCol - fromCol) == 2) {
-      int jumpedRow = (fromRow + toRow) / 2;
-      int jumpedCol = (fromCol + toCol) / 2;
-      board[jumpedRow][jumpedCol] = EMPTY;  // Ensure this is valid for Piece
+    // Check if the destination square is empty
+    if (board[toRow][toCol] == EMPTY) {
+        // Check for a jump (moving over an opponent's piece)
+        if (abs(toRow - fromRow) == 2 && abs(toCol - fromCol) == 2) {
+            int jumpedRow = (fromRow + toRow) / 2;
+            int jumpedCol = (fromCol + toCol) / 2;
 
-      // Update score when capturing a piece
-      if (board[fromRow][fromCol] == 1) {
-        scorePlayer1 += 1;
-      } else if (board[fromRow][fromCol] == 2) {
-        scorePlayer2 += 1;
-      }
-      updateScore();  // Update score after capturing
+            board[jumpedRow][jumpedCol] = EMPTY; 
+            (*drawSquarePtr)(jumpedRow, jumpedCol); 
+
+            if (board[fromRow][fromCol] == PLAYER1 || board[fromRow][fromCol] == KING1) {
+                scorePlayer1 += 1;
+            } else if (board[fromRow][fromCol] == PLAYER2 || board[fromRow][fromCol] == KING2) {
+                scorePlayer2 += 1;
+            }
+            updateScore();  
+        }
+
+        // Move the piece to the new square
+        board[toRow][toCol] = board[fromRow][fromCol];  
+        board[fromRow][fromCol] = EMPTY;  
+
+        // Check for promotion to king
+        if ((board[toRow][toCol] == PLAYER1 && toRow == 7) || (board[toRow][toCol] == KING1 && toRow == 7)) { 
+            board[toRow][toCol] = KING1; // Promote to king
+            scorePlayer1 += 2; // Add bonus points
+            updateScore(); 
+        } else if ((board[toRow][toCol] == PLAYER2 && toRow == 0) || (board[toRow][toCol] == KING2 && toRow == 0)) { 
+            board[toRow][toCol] = KING2; // Promote to king
+            scorePlayer2 += 2; // Add bonus points
+            updateScore(); 
+        }
+
+        // Redraw the moved squares
+        (*drawSquarePtr)(fromRow, fromCol);
+        (*drawSquarePtr)(toRow, toCol);
+        drawPieces(board); 
+
+        // Check for additional jumps after a capture
+        if (abs(toRow - fromRow) == 2 && hasMoreJump(toRow, toCol)) {
+            // Highlight the current piece to indicate the player can continue jumping
+            selectedX = toCol;
+            selectedY = toRow;
+            highlightSquare(toRow, toCol, ILI9341_YELLOW);
+            pieceSelected = true;  // Keep piece selected for another jump
+        } else {
+            pieceSelected = false; // End player's turn if no more jumps are possible
+            isPlayer1Turn = !isPlayer1Turn; // Toggle turn
+        }
     }
-
-    // Move the piece to the new square
-    board[toRow][toCol] = board[fromRow][fromCol];  // Ensure this is valid for Piece
-    board[fromRow][fromCol] = EMPTY;  // Ensure this is valid for Piece
-
-    // Check for promotion to king
-    if (board[toRow][toCol] == 1 && toRow == 7) { // Player 1 promotes
-      board[toRow][toCol] = KING1; // Promote to king, ensure -1 is valid for Piece
-      scorePlayer1 += 2; // Add bonus points
-      updateScore(); // Update score for promotion
-    } else if (board[toRow][toCol] == 2 && toRow == 0) { // Player 2 promotes
-      board[toRow][toCol] = KING2; // Promote to king, ensure -2 is valid for Piece
-      scorePlayer2 += 2; // Add bonus points
-      updateScore(); // Update score for promotion
-    }
-
-    // Redraw the moved squares
-    (*drawSquarePtr)(fromRow, fromCol);
-    (*drawSquarePtr)(toRow, toCol);
-    drawPieces(board); // Call the function correctly
-
-    // Check for more jumps after a capture
-    if (abs(toRow - fromRow) == 2 && hasMoreJump(toRow, toCol)) {
-      // Highlight the current piece to indicate the player can continue jumping
-      selectedX = toCol;
-      selectedY = toRow;
-      highlightSquare(toRow, toCol, ILI9341_YELLOW);
-      pieceSelected = true;  // Keep piece selected for another move
-    } else {
-      pieceSelected = false; // End player's turn
-    }
-  }
 }
+
+
 
 
 
@@ -258,36 +262,36 @@ bool isValidMove(Piece board[BOARD_SIZE][BOARD_SIZE], int fromRow, int fromCol, 
   // Player 1 regular piece
   if (piece == PLAYER1) {
     if (toRow == fromRow + 1 && abs(toCol - fromCol) == 1) {
-      return true;  // Normal move
+      return true;  
     } else if (toRow == fromRow + 2 && abs(toCol - fromCol) == 2 && board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == PLAYER2) {
-      return true;  // Capture move
+      return true;  
     }
   }
 
   // Player 2 regular piece
   else if (piece == PLAYER2) {
     if (toRow == fromRow - 1 && abs(toCol - fromCol) == 1) {
-      return true;  // Normal move
+      return true;  
     } else if (toRow == fromRow - 2 && abs(toCol - fromCol) == 2 && board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == PLAYER1) {
-      return true;  // Capture move
+      return true;  
     }
   }
 
   // Player 1 king (can move both forward and backward)
   else if (piece == KING1) {
     if (abs(toRow - fromRow) == 1 && abs(toCol - fromCol) == 1) {
-      return true;  // Normal move in any direction
+      return true;  
     } else if (abs(toRow - fromRow) == 2 && abs(toCol - fromCol) == 2 && (board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == PLAYER2 || board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == KING2)) {
-      return true;  // Capture move in any direction
+      return true;  
     }
   }
 
   // Player 2 king (can move both forward and backward)
   else if (piece == KING2) {
     if (abs(toRow - fromRow) == 1 && abs(toCol - fromCol) == 1) {
-      return true;  // Normal move in any direction
+      return true;  
     } else if (abs(toRow - fromRow) == 2 && abs(toCol - fromCol) == 2 && (board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == PLAYER1 || board[(fromRow + toRow) / 2][(fromCol + toCol) / 2] == KING1)) {
-      return true;  // Capture move in any direction
+      return true;  
     }
   }
 
@@ -297,66 +301,59 @@ bool isValidMove(Piece board[BOARD_SIZE][BOARD_SIZE], int fromRow, int fromCol, 
 
 
 void handleButtons() {
-  if (cursorX != lastX || cursorY != lastY) {
-    if (lastX != -1 && lastY != -1) {
-      (*highlightSquarePtr)(lastY, lastX, ILI9341_BLACK);// Unhighlight previous square
-      (*drawSquarePtr)(lastY, lastX);                     // Redraw square under the highlight
+    // Check if the cursor position has changed
+    if (cursorX != lastX || cursorY != lastY) {
+        if (lastX != -1 && lastY != -1) {
+            (*highlightSquarePtr)(lastY, lastX, ILI9341_BLACK); // Unhighlight previous square
+            (*drawSquarePtr)(lastY, lastX);                    // Redraw square under the highlight
+        }
+        (*highlightSquarePtr)(cursorY, cursorX, HIGHLIGHT_COLOR); // Highlight current square
+        lastX = cursorX; // Update lastX to current cursorX
+        lastY = cursorY; // Update lastY to current cursorY
     }
-    (*highlightSquarePtr)(cursorY, cursorX, HIGHLIGHT_COLOR);     // Highlight current square
-    lastX = cursorX;
-    lastY = cursorY;
-  }
 
-  // Handle cursor movement
-  if (digitalRead(BUTTON_UP) == LOW) {
-    cursorY = (cursorY - 1 + BOARD_SIZE) % BOARD_SIZE;  
-    delay(200); 
-  }
-  else if (digitalRead(BUTTON_DOWN) == LOW) {
-    cursorY = (cursorY + 1) % BOARD_SIZE;
-    delay(200);
-  }
-  else if (digitalRead(BUTTON_LEFT) == LOW) {
-    cursorX = (cursorX - 1 + BOARD_SIZE) % BOARD_SIZE;   
-    delay(200);  
-  }
-  else if (digitalRead(BUTTON_RIGHT) == LOW) {
-    cursorX = (cursorX + 1) % BOARD_SIZE;  
-    delay(200);
-  }
-
-// Handle coin selection and movement
-if (digitalRead(BUTTON_SELECT) == LOW) {
-  if (!pieceSelected) {
-    // Check if the selected piece belongs to the current player
-    int selectedPiece = board[cursorY][cursorX];
-    if ((isPlayer1Turn && (selectedPiece == PLAYER1 || selectedPiece == KING1)) || 
-        (!isPlayer1Turn && (selectedPiece == PLAYER2 || selectedPiece == KING2))) {
-      selectedX = cursorX;
-      selectedY = cursorY;
-      pieceSelected = true;
-      highlightSquare(cursorY, cursorX, ILI9341_YELLOW); // Highlight selected piece
+    if (digitalRead(BUTTON_UP) == LOW) {
+        cursorY = (cursorY - 1 + BOARD_SIZE) % BOARD_SIZE; // Move up
+        delay(200); 
     }
-  } else {
-    if (isValidMove(board, selectedY, selectedX, cursorY, cursorX)) {
-      movePiece(selectedY, selectedX, cursorY, cursorX);
-
-      // Un-highlight the previous square
-      highlightSquare(selectedY, selectedX, ILI9341_BLACK); 
-
-      // Toggle the turn after a valid move
-      isPlayer1Turn = !isPlayer1Turn;
-    } else {
-      // Briefly flash red to indicate an invalid move
-      highlightSquare(selectedY, selectedX, ILI9341_RED); 
-      delay(100);
-      highlightSquare(selectedY, selectedX, ILI9341_YELLOW);
+    else if (digitalRead(BUTTON_DOWN) == LOW) {
+        cursorY = (cursorY + 1) % BOARD_SIZE; // Move down
+        delay(200);
     }
-    pieceSelected = false;
-  }
-  delay(200); 
+    else if (digitalRead(BUTTON_LEFT) == LOW) {
+        cursorX = (cursorX - 1 + BOARD_SIZE) % BOARD_SIZE; // Move left
+        delay(200);  
+    }
+    else if (digitalRead(BUTTON_RIGHT) == LOW) {
+        cursorX = (cursorX + 1) % BOARD_SIZE; // Move right
+        delay(200);
+    }
+
+    // Handle coin selection and movement
+    if (digitalRead(BUTTON_SELECT) == LOW) {
+        if (!pieceSelected) {
+            // Check if the selected piece belongs to the current player
+            int selectedPiece = board[cursorY][cursorX];
+            if ((isPlayer1Turn && (selectedPiece == PLAYER1 || selectedPiece == KING1)) || 
+                (!isPlayer1Turn && (selectedPiece == PLAYER2 || selectedPiece == KING2))) {
+                selectedX = cursorX;
+                selectedY = cursorY;
+                pieceSelected = true;
+                highlightSquare(cursorY, cursorX, ILI9341_YELLOW); // Highlight selected piece
+            }
+        } else {
+            // Check if the move is valid
+            if (isValidMove(board, selectedY, selectedX, cursorY, cursorX)) {
+                movePiece(selectedY, selectedX, cursorY, cursorX);
+    
+                // Un-highlight the previous square
+                highlightSquare(selectedY, selectedX, ILI9341_BLACK); 
+            }
+        }
+    }
 }
-}
+
+
 
 
 
@@ -386,7 +383,6 @@ void updateTimer() {
 }
 
 void updateScore() {
-  // Clear the area where scores are displayed
   tft.fillRect(0, BOARD_SIZE * SQUARE_SIZE + 30, SCREEN_WIDTH, 60, ILI9341_BLACK);  // Clear previous score area
   displayStatus();  // Call displayStatus to redraw the updated scores
 }
@@ -400,8 +396,7 @@ void displayStatus() {
   tft.setTextSize(2);
   tft.print("Time: ");
   tft.print(TOTAL_TIME);  // Print the remaining seconds
-  tft.print("s");  // Include "s" for seconds
-
+  tft.print("s");  
   // Display Player 1 score with color indication
   tft.setCursor(10, BOARD_SIZE * SQUARE_SIZE + 30);
   tft.setTextColor(isPlayer1Turn ? ILI9341_GREEN : ILI9341_BLUE);  // Green if Player 1's turn
